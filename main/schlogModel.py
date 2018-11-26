@@ -30,7 +30,7 @@ class schloglModel:
         self.datasize = datasize
         self.datamultiplier = datamultiplier
         self.outresolution = outresolution
-        self.filename =  "../data/schlogl_data_vol" + str(self.vol) + "_ndata" + str(self.datasize) + ".dat"
+        self.filename =  "data/schlogl_data_vol" + str(self.vol) + "_ndata" + str(self.datasize) + ".dat"
         
         
     def lambdan(self,x):
@@ -155,9 +155,9 @@ class schloglModel:
         print("Percentage finished:", 100, "%    ", end="\r")
         
 
-    def loadData(self):
+    def loadData(self, filename):
         targetData = [None]*(self.datasize*self.datamultiplier)
-        data = np.genfromtxt(self.filename, delimiter=' ')
+        data = np.genfromtxt(filename, delimiter=' ')
         inputData = data[:,0]
         inputData = np.array([inputData]*self.datamultiplier).flatten()
         tstep = np.random.randint(0, int(self.timesteps/self.stride), self.datasize*self.datamultiplier)
