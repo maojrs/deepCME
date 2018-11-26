@@ -27,7 +27,7 @@ class neuralNetworkCME:
         
         # Define networks
         self.unet = self.uNetwork(self.xnet, self.tnet)
-        #self.fnet = self.fNetwork(self.xnet, self.tnet)
+        self.fnet = self.fNetwork(self.xnet, self.tnet)
         
         # Define loss function and optimizer
         self.loss = tf.reduce_mean(tf.square(self.u_net - self.uTarget)) #+ tf.reduce_mean(tf.square(self.f_pred))
@@ -56,10 +56,10 @@ class neuralNetworkCME:
     
     
     def uNetwork(self, x, t):
-        u = self.networkPrediction(tf.concat([x,t],1))
+        u = self.neuralNetwork(x, t)
         return u
     
     def fNetwork(self, x, t):
-        f=0
+        f = 0
         return f
     
