@@ -62,7 +62,7 @@ class schloglModel:
         '''Calculate nonequilibrium steady state solution'''
         result = 1.0
         for i in range(n):
-            result = result*(lambdan(i)/mun(i+1))
+            result = result*(self.lambdan(i)/self.mun(i+1))
         return result
 
 
