@@ -4,7 +4,7 @@ import tensorflow as tf
 # Neural network class specialized in solving the Chemical Master Equation (CME)
 class neuralNetworkCME:
 
-    def __init__(self, inputData, targetData, num_layers, neurons_per_layer, activation, input_dimension, output_dimension):
+    def __init__(self, inputData, targetData, num_layers, neurons_per_layer, activation, input_dimension, output_dimension, model):
         """ Initializes base parameters, architecture, loss function and 
         optimizer for the neural network. It also initializes tensor flow 
         session and variables"""
@@ -16,6 +16,7 @@ class neuralNetworkCME:
         self.neurons_per_layer = neurons_per_layer
         self.input_dimension = inputData.shape[1]
         self.output_dimension = np.array(targetData).shape[1]
+        self.model = model #model to be used by the network, required to obtain network for Fokker-Planck PDE
         
         self.activation = activation 
         #self.init_learning_rate = 1e-8 # 1e-3
@@ -30,10 +31,10 @@ class neuralNetworkCME:
         
         # Define networks
         self.unet = self.uNetwork(self.xnet, self.tnet)
-        self.fnet = self.fNetwork(self.xnet, self.tnet)
+        self.fpnet = self.fpNetwork(self.xnet, self.tnet)
         
         # Define loss function, error function and optimizer
-        self.loss = tf.reduce_mean(tf.square(self.unet - self.uTarget)) #+ tf.reduce_mean(tf.square(self.f_pred))
+        self.loss = tf.reduce_mean(tf.square(self.unet - self.uTarget)) + tf.reduce_mean(tf.square(self.fpnet))
         self.error = tf.reduce_max(tf.abs(self.unet - self.uTarget))
         self.optimizer = tf.train.AdamOptimizer()
         self.train_step = self.optimizer.minimize(self.loss)
@@ -55,7 +56,7 @@ class neuralNetworkCME:
             hidden[l+1] = tf.layers.dense(hidden[l], self.neurons_per_layer, activation=self.activation)
             
         # Add prediction outermost layer
-        networkPrediction = tf.layers.dense(hidden[self.num_layers-2], self.output_dimension, activation=None, name='prediction')
+        networkPrediction = tf.layers.dense(hidden[self.num_layers-2], self.output_dimension, activation=None, name='prediction',reuse=tf.AUTO_REUSE)
         return networkPrediction
     
     
@@ -65,9 +66,15 @@ class neuralNetworkCME:
         return u
     
     
-    def fNetwork(self, x, t):
+    def fpNetwork(self, x, t):
         ''' Network that approximates f(x,t) = u_t - Lu '''
-        f = 0
+        mu = self.model.drift(x)
+        sigma = self.model.sigma(x)
+        u = self.uNetwork(x,t)
+        ut = tf.gradients(u, t)[0]
+        ux = tf.gradients(u, x)[0]
+        uxx = tf.gradients(ux, x)[0]
+        f = ut + mu*ux + 0.5*sigma*uxx
         return f
     
 
